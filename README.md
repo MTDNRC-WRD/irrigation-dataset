@@ -25,6 +25,9 @@ in the script with a call to 'gdalbuildvrt' to create an image pyramid that allo
 imagery at various zoom levels. The resulting 'catalog.vrt' file was then imported into QGIS and used as an imagery
 base layer during data editing. There are likely proprietary solutions to this problem, as well.
 
+The imagery in Google Earth Engine can be displayed by users here: 
+    https://code.earthengine.google.com/50355d5df32c54d8d0baf088143b18af
+
 Manual Editing:
 
 For the most part, we edited 2019 Montana Department of Revenue 'Final Land Unit' (FLU) data to meet our specifications, 
@@ -40,6 +43,10 @@ Create a comprehensive coverage of Montana's irrigation-equipped agricultural fi
         P - Center Pivot Irrigation.
         S - Sprinkler Irrigation.
         F - Flood irrigation.
+    - Is attributed by confidence in usage:
+        3. Highest confidence, high usage.
+        2. Medium confidence, medium usage.
+        1. Low confidence, low usage.
     - Is discrete. Each discernable field is discretized in a single object. Multi-field objects, such as is common
         in the FLU data, must be split into individual fields.
 
@@ -52,7 +59,7 @@ Output Data:
 The 'process' code is designed to unify, standardize, and clean the 
 
 The code is designed to merge the county-based shapefiles of irrigated area created by MT DNRC during several 
-internships from 2018 - 2024 that used Google Earth Engine and USDA FSA NAIP imagery to update existing 
-sources of agricultural field boundaries. The final project working on the data was done from 2021 - 2024, 
+internships from 2018 to 2024 that used Google Earth Engine and USDA FSA NAIP imagery to update existing 
+sources of agricultural field boundaries. The final project working on the data was done from 2021 to 2024, 
 and used 2019/2020 NAIP imagery for irrigation type classification and boundary geometry editing. 
 
