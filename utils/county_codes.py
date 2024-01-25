@@ -1,4 +1,3 @@
-import os
 
 
 def county_codes():
