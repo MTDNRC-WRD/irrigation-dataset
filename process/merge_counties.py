@@ -44,17 +44,17 @@ def standardize_county_shapefiles(root, out_dir):
                 try:
                     if np.count_nonzero(np.isnan(df[c].values)) > 0:
                         df[c].fillna(NODATA[i], inplace=True)
-                except ValueError:
+                except ValueError as e:
                     if c == 'fid':
                         df[c] = list(range(df.shape[0]))
                     else:
-                        raise TypeError('Unhandled exception for {} in {} {}'.format(c, co, v['NAME']))
+                        raise TypeError('Unhandled exception ({}) for {} in {} {}'.format(e, c, co, v['NAME']))
 
-            except TypeError:
+            except TypeError as e:
                 if c == 'geometry':
                     pass
                 else:
-                    raise TypeError('Unhandled exception for {} in {} {}'.format(c, co, v['NAME']))
+                    raise TypeError('Unhandled exception ({}) for {} in {} {}'.format(e, c, co, v['NAME']))
 
         _file = os.path.join(out_dir, '{}_{}.shp'.format(co, v['NAME'].replace(' ', '_')))
         df.to_file(_file)
