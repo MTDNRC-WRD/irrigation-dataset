@@ -8,7 +8,7 @@ from shapely.geometry import Polygon
 from utils.county_codes import county_codes
 
 FIELDS = ['fid', 'itype', 'usage', 'mapped_by', 'geometry']
-DTYPES = [np.int64, str, np.int64, str, Polygon]
+DTYPES = [str, str, np.int64, str, Polygon]
 NODATA = [None, 'UNK', 1, 'DK', None]
 
 
@@ -19,7 +19,6 @@ def standardize_county_shapefiles(root, out_dir):
 
     for co, v in codes.items():
 
-        print(co)
         shp = [x for x in files if co in x]
         if len(shp) != 1:
             print(co, v['NAME'], 'is missing')
@@ -39,16 +38,16 @@ def standardize_county_shapefiles(root, out_dir):
 
         for i, c in enumerate(FIELDS):
             try:
+                if c == 'fid':
+                    df[c] = ['{}_{}'.format(co, str(x).rjust(6, '0')) for x in range(1, df.shape[0] + 1)]
                 df[c] = df[c].astype(DTYPES[i])
-            except pd.errors.IntCastingNaNError:
+            except ValueError:
                 try:
                     if np.count_nonzero(np.isnan(df[c].values)) > 0:
                         df[c].fillna(NODATA[i], inplace=True)
+                        df[c] = df[c].astype(DTYPES[i])
                 except ValueError as e:
-                    if c == 'fid':
-                        df[c] = list(range(df.shape[0]))
-                    else:
-                        raise TypeError('Unhandled exception ({}) for {} in {} {}'.format(e, c, co, v['NAME']))
+                    raise TypeError('Unhandled exception ({}) for {} in {} {}'.format(e, c, co, v['NAME']))
 
             except TypeError as e:
                 if c == 'geometry':
@@ -61,10 +60,8 @@ def standardize_county_shapefiles(root, out_dir):
 
 
 if __name__ == '__main__':
-    d = '/media/research/IrrigationGIS/Montana/geointernship/progress/wgs'
-    # o = '/media/research/IrrigationGIS/Montana/geointernship/standardized_county'
-    o = '/media/research/IrrigationGIS/Montana/dalby/statewide_irrigation_dataset_provisional_25JAN2024'
-    standardize_county_shapefiles(d, o)
+    i = '/media/research/IrrigationGIS/Montana/geointernship/progress/wgs'
+    o = '/media/research/IrrigationGIS/Montana/statewide_irrigation_dataset/statewide_irrigation_dataset_15FEB2024'
+    standardize_county_shapefiles(i, o)
 
-    s = '/media/research/IrrigationGIS/Montana/geointernship/statewide_irrigation_dataset_v1.shp'
 # ========================= EOF ====================================================================

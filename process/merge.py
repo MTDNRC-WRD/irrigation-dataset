@@ -22,8 +22,8 @@ def merge_counties(_dir, out_shp):
 
     meta = fiona.open(file_list[0]).meta
     meta['schema'] = {'type': 'Feature', 'properties': OrderedDict(
-        [('FID', 'str'), ('SOURCECODE', 'str'), ('COUNTY_NO', 'str'), ('COUNTYNAME', 'str'),
-         ('ITYPE', 'int'), ('USAGE', 'int'), ('MAPPEDBY', 'str')]),
+        [('FID', 'str'), ('SOURCECODE', 'str'), ('COUNTY_NO', 'int'), ('COUNTYNAME', 'str'),
+         ('ITYPE', 'str'), ('USAGE', 'int'), ('MAPPEDBY', 'str')]),
                       'geometry': 'Polygon'}
 
     with fiona.open(out_shp, 'w', **meta) as output:
@@ -47,10 +47,14 @@ def merge_counties(_dir, out_shp):
 
                     # TODO: classify sourcecode in standardization procedure
                     # source = feat['properties']['SOURCECODE']
-
                     source = 'MTDNRC'
                     fid = feat['properties']['fid']
+
                     itype = feat['properties']['itype']
+                    itype = itype.upper()[0]
+                    if itype not in ['P', 'S', 'F']:
+                        itype = 'UNK'
+
                     usage = feat['properties']['usage']
                     mapped_by = feat['properties']['mapped_by']
                     feat = {'type': 'Feature', 'properties': OrderedDict(
@@ -151,7 +155,7 @@ if __name__ == '__main__':
     if not os.path.isdir(d):
         d = '/home/dgketchum/data/IrrigationGIS/Montana'
 
-    s = os.path.join(d, 'statewide_irrigation_dataset/statewide_irrigation_dataset_provisional_25JAN2024')
-    o = os.path.join(d, 'statewide_irrigation_dataset/statewide_irrigation_dataset_provisional_25JAN2024.shp')
+    s = os.path.join(d, 'statewide_irrigation_dataset/statewide_irrigation_dataset_15FEB2024')
+    o = os.path.join(d, 'statewide_irrigation_dataset/statewide_irrigation_dataset_15FEB2024.shp')
     merge_counties(s, o)
 # ========================= EOF ====================================================================
