@@ -4,6 +4,7 @@ from subprocess import check_call
 import ee
 import fiona
 import pandas as pd
+import geopandas as gpd
 
 from utils.extract_cdl import get_cdl
 from utils.extract_irrmapper import get_irrigation
@@ -69,19 +70,56 @@ def get_field_properties(tiles, src_dir):
             print('{} failed: {}'.format(glob, e))
 
 
+def write_field_properties(tiles, fields, cdl_dir, irr_dir, out_dir, key='id'):
+
+    for tile in tiles:
+
+        shp = os.path.join(fields, '{}.shp'.format(tile))
+
+        try:
+            df = gpd.read_file(shp)
+            df.set_index('id', inplace=True)
+        except fiona.errors.DriverError:
+            print('Error Opening {}\n'.format(shp))
+            continue
+        except KeyError:
+            print('KeyError: {}\n'.format(shp))
+
+        cdl = pd.read_csv(os.path.join(cdl_dir, 'cdl_{}.csv'.format(tile)), index_col=key)
+
+        irr = pd.read_csv(os.path.join(irr_dir, 'irr_{}.csv'.format(tile)), index_col=key)
+        irr = irr[['irr_{}'.format(y) for y in range(2017, 2022)]].mean(axis=1)
+        irr = irr.sort_index()
+        irr = irr[irr > 0.0]
+
+        match = [i for i in df.index if i in irr.index]
+        df = df.loc[match]
+        df.loc[match, 'irr'] = irr.loc[match]
+        out_ = os.path.join(out_dir, '{}.shp'.format(tile))
+        df.to_file(out_)
+        print('Wrote {}'.format(out_))
+
+
 if __name__ == '__main__':
 
-    d = '/media/research/IrrigationGIS/Montana/statewide_irrigation_dataset'
+    d = '/media/research/IrrigationGIS/Montana/statewide_irrigation_dataset/future_work_15FEB2024'
     if not os.path.isdir(d):
-        d = '/home/dgketchum/data/IrrigationGIS/Montana/statewide_irrigation_dataset'
+        d = '/home/dgketchum/data/IrrigationGIS/Montana/statewide_irrigation_dataset/future_work_15FEB2024'
 
-    mgrs_tiles = os.path.join(d, 'future_work_15FEB2024', 'mt_mgrs_tiles.csv')
-    tiles = list(pd.read_csv(mgrs_tiles)['MGRS_TILE'])
+    mgrs_tiles = os.path.join(d, 'mt_mgrs_tiles.csv')
+    tiles_ = list(pd.read_csv(mgrs_tiles)['MGRS_TILE'])
 
-    opnt_mgrs_fields = os.path.join(d, 'future_work_15FEB2024', 'mgrs_split_clean_wgs')
+    opnt_mgrs_fields = os.path.join(d, 'mgrs_split_clean_wgs')
     # push_fields_to_asset(opnt_mgrs_fields, tiles, 'gs://wudr')
 
     field_asset_dir = 'users/dgketchum/fields/mgrs_split_clean_wgs'
-    get_field_properties(tiles, field_asset_dir)
+    # get_field_properties(tiles, field_asset_dir)
+
+    cdl_data = os.path.join(d, 'mgrs_properties', 'mgrs_cdl')
+    irr_data = os.path.join(d, 'mgrs_properties', 'mgrs_irr')
+
+    attributed = os.path.join(d, 'mgrs_attrs')
+
+    write_field_properties(tiles_, opnt_mgrs_fields, cdl_data, irr_data, attributed)
 
 # ========================= EOF ====================================================================
