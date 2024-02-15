@@ -6,14 +6,14 @@ import ee
 IRR = 'projects/ee-dgketchum/assets/IrrMapper/IrrMapperComp'
 
 
-def get_irrigation(fields, desc, debug=False):
+def get_irrigation(fields, desc, debug=False, key='FID'):
     ee.Authenticate()
     ee.Initialize(project='ee-dgketchum')
 
     plots = ee.FeatureCollection(fields)
     irr_coll = ee.ImageCollection(IRR)
 
-    _selectors = ['FID']
+    _selectors = [key]
     first = True
 
     area, irr_img = ee.Image.pixelArea(), None
@@ -40,6 +40,8 @@ def get_irrigation(fields, desc, debug=False):
 
     if debug:
         debug = means.filterMetadata('FID', 'equals', 2423).getInfo()
+
+    desc = 'irr_{}'.format(desc)
 
     task = ee.batch.Export.table.toCloudStorage(
         means,
