@@ -1,9 +1,15 @@
+import pandas as pd
+import geopandas as gpd
+
 import ee
 
 IRR = 'projects/ee-dgketchum/assets/IrrMapper/IrrMapperComp'
 
 
 def get_irrigation(fields, desc, debug=False):
+    ee.Authenticate()
+    ee.Initialize(project='ee-dgketchum')
+
     plots = ee.FeatureCollection(fields)
     irr_coll = ee.ImageCollection(IRR)
 
@@ -46,15 +52,37 @@ def get_irrigation(fields, desc, debug=False):
     task.start()
 
 
-if __name__ == '__main__':
-    ee.Authenticate()
-    ee.Initialize(project='ee-dgketchum')
+def infer_irrigation_usage(in_shp, irr_, out_shp):
+    irr = pd.read_csv(irr_, index_col='FID')
+    df = gpd.read_file(in_shp, index_col='FID')
 
+    def usage(row):
+        if row >= 0.75:
+            return 3
+        elif 0.4 < row < 0.75:
+            return 2
+        else:
+            return 1
+
+    cols = [c for c in irr.columns if int(c.split('_')[1]) in [2018, 2019, 2020, 2021]]
+    irr = irr[cols].mean(axis=1)
+    irr = irr.apply(lambda x: usage(x))
+    match = [i for i in df.index if i in irr.index]
+    df.loc[match, 'USAGE'] = irr.loc[match]
+
+    df.to_file(out_shp)
+
+
+if __name__ == '__main__':
     project = '047_lake'
     fields_ = 'users/dgketchum/fields/lake_co_wudr_15FEB2024'
 
     description = '{}_irr'.format(project)
-    get_irrigation(fields_, description, debug=True)
+    # get_irrigation(fields_, description, debug=True)
 
+    irr_csv = '/media/research/IrrigationGIS/Montana/geointernship/Lake_047/047_lake_irr.csv'
+    s = '/media/research/IrrigationGIS/Montana/geointernship/Lake_047/047_Lake_RDGP.shp'
+    o = '/media/research/IrrigationGIS/Montana/geointernship/Lake_047/047_Lake.shp'
+    infer_irrigation_usage(s, irr_csv, o)
 
 # ========================= EOF ====================================================================
