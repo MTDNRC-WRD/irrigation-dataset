@@ -79,3 +79,18 @@ of small reservoirs and ditches. Further inspection using existing landcover inf
 IrrMapper (https://www.mdpi.com/2072-4292/12/14/2328) and USDA's Cropland Data Layer 
 (https://www.tandfonline.com/doi/full/10.1080/10106049.2011.562309), show detections of irrigation and crops likely
 to be irrigated (cord, alfalfa, and barley).
+
+Having in mind the necessity of extracting additional field boundaries, we exploited recent work by the OpenET
+Project that compiled over 12 million field boundaries in the Conterminous United States that meet the geometric
+specifications of the data in the SID. See (https://onlinelibrary.wiley.com/doi/full/10.1111/1752-1688.12956). The 
+OpenET fields database represents a compilation of federal, state, and regional field boundary datasources which were 
+iteratively added to their database through a hierarchical system of field boundary dataset prioritization, 
+extraction of ancillary land use data to verify cultivation, and clipping, dissolving, and sliver-eliminating 
+GIS operations. 
+
+To find potential additional field boundaries in Montana, we split accessed the OpenET fields database at a tile-scale.
+OpenET's approach is to process the field boundaries in Military Grid Reference System (MGRS) tiles. Each MGRS tile 
+is a maximum of about 10,000 square km, which enables the computationally intensive spatial operations to execute on
+a typical computer and might contain several thousand field objects in a tile in Montana. We used Earth Engine to
+extract IrrMapper spatial statistics for each field to estimate the mean fraction irrigated each year, 1987-2021. This 
+dataset 
