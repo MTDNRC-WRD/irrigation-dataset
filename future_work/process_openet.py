@@ -26,24 +26,24 @@ WGS = '+proj=longlat +datum=WGS84 +no_defs'
 os.environ['GDAL_DATA'] = 'miniconda3/envs/gcs/share/gdal/'
 
 
-def push_fields_to_asset(_dir, tiles, bucket):
+def push_fields_to_asset(_dir, tiles, asset_folder, bucket):
     missing = []
-    for glob in tiles:
+    for tile in tiles:
 
-        if glob not in ['11TQN', '13UBP']:
-            continue
+        # if tile not in ['12UXU']:
+        #     continue
 
-        local_files = [os.path.join(_dir, '{}.{}'.format(glob, ext)) for ext in
+        local_files = [os.path.join(_dir, tile, '{}_CLU.{}'.format(tile, ext)) for ext in
                        ['shp', 'prj', 'shx', 'dbf']]
 
         if not all([os.path.exists(lf) for lf in local_files]):
-            print('\n{} not found'.format(glob))
-            missing.append(glob)
+            print('\n{} not found'.format(tile))
+            missing.append(tile)
             continue
 
-        bucket_dst = os.path.join(bucket, 'mgrs_split_clean_wgs')
+        bucket_dst = os.path.join(bucket, asset_folder)
 
-        bucket_files = [os.path.join(bucket_dst, '{}.{}'.format(glob, ext)) for ext in
+        bucket_files = [os.path.join(bucket_dst, '{}_CLU.{}'.format(tile, ext)) for ext in
                         ['shp', 'prj', 'shx', 'dbf']]
 
         for lf, bf in zip(local_files, bucket_files):
@@ -51,7 +51,7 @@ def push_fields_to_asset(_dir, tiles, bucket):
             check_call(cmd)
 
         asset_id = os.path.basename(bucket_files[0]).split('.')[0]
-        ee_dst = 'users/dgketchum/fields/mgrs_split_clean_wgs/{}'.format(asset_id)
+        ee_dst = 'users/dgketchum/fields/{}/{}'.format(asset_folder, asset_id)
         cmd = [EE, 'upload', 'table', '-f', '--asset_id={}'.format(ee_dst), bucket_files[0]]
         check_call(cmd)
         print(asset_id, bucket_files[0])
@@ -60,14 +60,18 @@ def push_fields_to_asset(_dir, tiles, bucket):
 
 
 def get_field_properties(tiles, src_dir):
-    for glob in tiles:
+    for tile in tiles:
         try:
-            src = os.path.join(src_dir, glob)
-            get_irrigation(src, glob, key='id')
-            get_cdl(src, glob, key='id')
-            print(glob)
+
+            # if tile not in ['12UXU']:
+            #     continue
+
+            src = os.path.join(src_dir, '{}_CLU'.format(tile))
+            get_irrigation(src, tile, key='id')
+            get_cdl(src, tile, key='id')
+            print(tile)
         except ee.EEException as e:
-            print('{} failed: {}'.format(glob, e))
+            print('{} failed: {}'.format(tile, e))
 
 
 def write_field_properties(tiles, fields, cdl_dir, irr_dir, out_dir, key='id'):
@@ -109,17 +113,21 @@ if __name__ == '__main__':
     mgrs_tiles = os.path.join(d, 'mt_mgrs_tiles.csv')
     tiles_ = list(pd.read_csv(mgrs_tiles)['MGRS_TILE'])
 
-    opnt_mgrs_fields = os.path.join(d, 'mgrs_split_clean_wgs')
-    # push_fields_to_asset(opnt_mgrs_fields, tiles, 'gs://wudr')
+    mgrs = os.path.join(d, 'MGRS')
+    split = os.path.join(mgrs, 'split')
 
-    field_asset_dir = 'users/dgketchum/fields/mgrs_split_clean_wgs'
-    # get_field_properties(tiles, field_asset_dir)
+    cloud_location = 'mgrs_split_clu'
+
+    push_fields_to_asset(split, tiles_, cloud_location, 'gs://wudr')
+
+    field_asset_dir = 'users/dgketchum/fields/{}'.format(cloud_location)
+    # get_field_properties(tiles_, field_asset_dir)
 
     cdl_data = os.path.join(d, 'mgrs_properties', 'mgrs_cdl')
     irr_data = os.path.join(d, 'mgrs_properties', 'mgrs_irr')
 
     attributed = os.path.join(d, 'mgrs_attrs')
 
-    write_field_properties(tiles_, opnt_mgrs_fields, cdl_data, irr_data, attributed)
+    # write_field_properties(tiles_, opnt_mgrs_fields, cdl_data, irr_data, attributed)
 
 # ========================= EOF ====================================================================
