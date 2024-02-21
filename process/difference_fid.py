@@ -16,7 +16,8 @@ def check_fid_spatial(old, new, json_out):
     aligned = []
     not_aligned = []
     nonetype_geo = []
-    geos_exception = []
+    new_invalid_geo = []
+    old_invalid_geo = []
 
     for s in l:
 
@@ -26,22 +27,38 @@ def check_fid_spatial(old, new, json_out):
 
         for i, r in odf.iterrows():
             og = r['geometry']
+
+            try:
+                a = og.area
+            except shapely.errors.GEOSException as e:
+                print('{} {}'.format(i, e))
+                old_invalid_geo.append(i)
+                continue
+            except AttributeError as e:
+                print('{} {}'.format(i, e))
+                old_invalid_geo.append(i)
+                continue
+
             try:
                 ng = df.loc[i, 'geometry']
             except KeyError:
                 print('{} not in new data ({} features)'.format(i, odf.shape[0]))
                 new_missing.append(i)
-
-            in_both.append(i)
+                continue
 
             try:
-                check = og.intersects(ng)
-            except AttributeError as e:
-                print('{} {}'.format(i, e))
-                nonetype_geo.append(i)
+                a = ng.area
             except shapely.errors.GEOSException as e:
                 print('{} {}'.format(i, e))
-                geos_exception.append(i)
+                new_invalid_geo.append(i)
+                continue
+            except AttributeError as e:
+                print('{} {}'.format(i, e))
+                new_invalid_geo.append(i)
+                continue
+
+            in_both.append(i)
+            check = og.intersects(ng)
 
             if check:
                 aligned.append(i)
@@ -52,18 +69,18 @@ def check_fid_spatial(old, new, json_out):
            'in_both': in_both,
            'aligned': aligned,
            'not_aligned': not_aligned,
-           'nonetype_geo': nonetype_geo,
-           'geos_exception': geos_exception}
+           'old_geo_exception': old_invalid_geo,
+           'new_geo_exception': new_invalid_geo}
 
     with open(json_out, 'w') as fp:
         json.dump(dct, fp, indent=4)
 
 
 if __name__ == '__main__':
-    old_ = '/home/dgketchum/Downloads/sid_30JAN2024/sid_29JAN2024'
+    old_ = '/home/dgketchum/Downloads/sid/provisional'
     new_ = ('/media/research/IrrigationGIS/Montana/statewide_irrigation_dataset/'
             'statewide_irrigation_dataset_15FEB2024.shp')
     json_o = '/home/dgketchum/Downloads/sid/discrepencies'
-    check_fid_spatial(old_, new_)
+    check_fid_spatial(old_, new_, json_o)
 
 # ========================= EOF ====================================================================
