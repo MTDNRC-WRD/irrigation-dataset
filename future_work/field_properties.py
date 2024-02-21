@@ -120,8 +120,8 @@ def write_field_properties(tiles, fields, cdl_dir, irr_dir, out_dir, key='id', o
             cdl = cdl.astype(int)
         except pd.errors.IntCastingNaNError:
             nan_ct = np.count_nonzero(np.isnan(cdl.values))
-            print('{} NaN in array of {}: {}'.format(nan_ct, cdl.size, tile))
-            cdl.dropna(axis=1, inplace=True)
+            print('{} NaN in array of {}: {}'.format(nan_ct, cdl.shape[0], tile))
+            cdl.dropna(axis=0, inplace=True)
             cdl = cdl.astype(int)
         cdl = cdl.apply(lambda x: np.any([i for i in x if i in include_codes]), axis=1)
         cdl = cdl[cdl]
@@ -133,7 +133,7 @@ def write_field_properties(tiles, fields, cdl_dir, irr_dir, out_dir, key='id', o
         irr = pd.read_csv(irr_file, index_col=key)
         irr = irr[['irr_{}'.format(y) for y in range(2017, 2022)]].mean(axis=1)
         irr = irr.sort_index()
-        irr = irr[irr > 0.0]
+        irr = irr[irr > 0.05]
         if irr.empty:
             print('No cultivation detected in {}'.format(tile))
             continue
@@ -145,7 +145,7 @@ def write_field_properties(tiles, fields, cdl_dir, irr_dir, out_dir, key='id', o
         if not os.path.isdir(out_d):
             os.mkdir(out_d)
         df.to_file(out_f)
-        print('Wrote {}'.format(out_f))
+        print('Wrote {}, {} features'.format(os.path.basename(out_f), df.shape[0]))
 
 
 def copy_unfiltered(tiles, in_dir, out_dir):
