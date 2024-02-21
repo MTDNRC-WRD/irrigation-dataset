@@ -7,8 +7,6 @@ IRR = 'projects/ee-dgketchum/assets/IrrMapper/IrrMapperComp'
 
 
 def get_irrigation(fields, desc, debug=False, key='FID'):
-    ee.Authenticate()
-    ee.Initialize(project='ee-dgketchum')
 
     plots = ee.FeatureCollection(fields)
     irr_coll = ee.ImageCollection(IRR)

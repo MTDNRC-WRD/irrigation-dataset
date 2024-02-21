@@ -9,7 +9,7 @@ IRR = 'projects/ee-dgketchum/assets/IrrMapper/IrrMapperComp'
 def get_cdl(fields, desc, key='FID'):
     plots = ee.FeatureCollection(fields)
     crops, first = None, True
-    cdl_years = [x for x in range(2008, 2023)]
+    cdl_years = [x for x in range(2018, 2023)]
 
     _selectors = [key]
 
