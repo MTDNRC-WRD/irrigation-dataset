@@ -15,7 +15,7 @@ def check_fid_spatial(old, new, json_out):
     in_both = []
     aligned = []
     not_aligned = []
-    nonetype_geo = []
+    new_fields = []
     new_invalid_geo = []
     old_invalid_geo = []
 
@@ -65,7 +65,12 @@ def check_fid_spatial(old, new, json_out):
             else:
                 not_aligned.append(i)
 
+    for i, r in df.iterrows():
+        if i not in in_both:
+            new_fields.append(i)
+
     dct = {'new_missing': new_missing,
+           'new_fields': new_fields,
            'in_both': in_both,
            'aligned': aligned,
            'not_aligned': not_aligned,
@@ -80,7 +85,7 @@ if __name__ == '__main__':
     old_ = '/home/dgketchum/Downloads/sid/provisional'
     new_ = ('/media/research/IrrigationGIS/Montana/statewide_irrigation_dataset/'
             'statewide_irrigation_dataset_15FEB2024.shp')
-    json_o = '/home/dgketchum/Downloads/sid/discrepencies'
+    json_o = '/home/dgketchum/Downloads/sid/discrepencies.json'
     check_fid_spatial(old_, new_, json_o)
 
 # ========================= EOF ====================================================================

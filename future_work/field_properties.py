@@ -92,9 +92,12 @@ def get_field_properties(tiles, src_dir, key='id', check_dir=None):
             print('{} failed: {}'.format(tile, e))
 
 
-def write_field_properties(tiles, fields, cdl_dir, irr_dir, out_dir, key='id', overwrite=False):
+def write_field_properties(tiles, fields, cdl_dir, irr_dir, out_dir, key='id', overwrite=False, check_geo=False):
     include_codes = [k for k in cdl_crops().keys()]
     for tile in tiles:
+
+        if tile != '13TDL':
+            continue
 
         out_d = os.path.join(out_dir, tile)
         out_f = os.path.join(out_d, '{}_CLU.shp'.format(tile))
@@ -144,6 +147,13 @@ def write_field_properties(tiles, fields, cdl_dir, irr_dir, out_dir, key='id', o
         df.loc[match, 'irr'] = irr.loc[match]
         if not os.path.isdir(out_d):
             os.mkdir(out_d)
+
+        if check_geo:
+            g = df.iloc[0]['geometry']
+            for i, r in df.iterrows():
+                geo = r['geometry']
+                check = geo.intersects(g)
+
         df.to_file(out_f)
         print('Wrote {}, {} features'.format(os.path.basename(out_f), df.shape[0]))
 
@@ -198,7 +208,8 @@ if __name__ == '__main__':
 
     attributed = os.path.join(mgrs, 'split_filtered')
 
-    write_field_properties(tiles_, split, cdl_data, irr_data, attributed, key='OBJECTID', overwrite=False)
+    write_field_properties(tiles_, split, cdl_data, irr_data, attributed,
+                           key='OBJECTID', overwrite=True, check_geo=True)
 
     # copy_unfiltered(tiles_, split, attributed)
 
