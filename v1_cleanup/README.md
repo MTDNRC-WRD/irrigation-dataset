@@ -11,7 +11,7 @@ Data available at: https://mslservices.mt.gov/Geographic_Information/Data/DataLi
 - Geometry simplified to remove polygon vertices less than 1 meter apart. These close vertices are often artifacts of the curve-drawing process for circular fields. The simplification speeds up computation and reduces storage without sacrificing accuracy.
 
 #### Errors corrected with 'v1_cleanup.py':
-- Removal of unreasonably small fields (areas less than 400 m^2, 58 identified in V1.0 SID)
+- Removal of unreasonably small fields (areas less than 0.1 acres or 400 m^2, 58 identified in V1.0 SID)
 - removal of duplicate set of Jefferson County fields (n=562)
 - removal of additional visually identified duplicate fields (n=178), FIDs listed in BAD_FIELDS.
 

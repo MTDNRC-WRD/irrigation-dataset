@@ -189,7 +189,7 @@ def sid_v1_cleanup(in_dir, infile=None, savefile=True, out_dir=None, outfile=Non
 
     Corrections addressed:
       - geometry simplified to remove vertices closer than 1 meter apart.
-      - removal of unreasonably small fields (<500m^2 or 0.1 acres; n=58)
+      - removal of unreasonably small fields (less than 0.1 acres or 400 m^2; n=58)
       - removal of duplicate set of Jefferson County fields (n=562)
       - removal of additional visually identified duplicate fields (n=178), FIDs listed in BAD_FIELDS.
 
@@ -211,6 +211,7 @@ def sid_v1_cleanup(in_dir, infile=None, savefile=True, out_dir=None, outfile=Non
         sid_file = os.path.join(in_dir, 'Montana_Statewide_Irrigation_Dataset.shp')
 
     # STEP 0: LOAD IN SHAPEFILE AND SIMPLIFY GEOMETRIES
+
     # Load and format data
     sid = gpd.read_file(sid_file)
     sid = sid.to_crs("EPSG:5071")
@@ -222,17 +223,10 @@ def sid_v1_cleanup(in_dir, infile=None, savefile=True, out_dir=None, outfile=Non
     sid['geometry'] = sid['geometry'].simplify(1)
 
     # STEP 1: IDENTIFY AND REMOVE TINY FIELDS
-    size = 400  # Area in m^2 used as cutoff threshold for unreasonably small fields.
-    # When defined as area less than...
-    # 1 m^2: 18 fields identified in dataset.
-    # 100 m^2: 47 fields.
-    # 400 m^2: 58 fields.
-    # 500 m^2: 62 fields.
-    # 1000 m^2: 73 fields.
 
     # identify tiny fields
-    sid['area_m2'] = sid['geometry'].area
-    tiny_fields = sid[sid['area_m2'] < size].index
+    size = 0.1  # Area in acres used as cutoff threshold for unreasonably small fields.
+    tiny_fields = sid[sid['New_Acres'] < size].index
 
     # remove tiny fields
     sid = sid.drop(tiny_fields)
@@ -259,7 +253,7 @@ def sid_v1_cleanup(in_dir, infile=None, savefile=True, out_dir=None, outfile=Non
         # Save cleaned data to new shapefile
         clean_sid.to_file(out)
 
-    return clean_sid  # Do I always want it to output the gdf?
+    return clean_sid
 
 
 if __name__ == '__main__':
